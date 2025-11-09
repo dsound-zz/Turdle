@@ -11,6 +11,7 @@ interface Word {
 function App() {
   const [guess, setGuess] = useState<string>("sssss");
   const [word, setWord] = useState<Word[]>([]);
+  const [words, setWords] = useState<Word[][]>([]);
 
   function submitWord() {
     const letterStatus: Word[] = [];
@@ -33,11 +34,24 @@ function App() {
     }
     setWord(letterStatus);
   }
-  console.log(word);
 
   useEffect(() => {
     submitWord();
   }, []);
+
+  useEffect(() => {
+    console.log("in useEffect: ", word);
+    const currentWordsIndex = words.length;
+    const winningWords = word
+      .map((letter) => letter.status)
+      .every((status) => status === "correct");
+
+    if (winningWords) {
+      console.log(`You won in ${currentWordsIndex + 1} tries!`);
+    }
+  }, [word, words]);
+
+  console.log(word, words);
 
   return <div />;
 }
