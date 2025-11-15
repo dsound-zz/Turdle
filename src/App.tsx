@@ -22,6 +22,7 @@ function App() {
   const [usedLetters, setUsedLetters] = useState<Map<string, EvaluationResult>>(
     () => new Map()
   );
+  const [flippingBoxes, setFlippingBoxes] = useState<Set<string>>(new Set());
 
   function handleKeyPress(letter: string) {
     playClickSound();
@@ -70,6 +71,11 @@ function App() {
     );
 
     for (const [index, evaluation] of evaluationResults.entries()) {
+      // Trigger flip animation
+      const boxKey = `${currentRow}-${index}`;
+      setFlippingBoxes((prev) => new Set(prev).add(boxKey));
+
+      // Set evaluation (color change happens during flip)
       setEvaluations((prev) => {
         const next = prev.map((evaluationRow) => [...evaluationRow]);
         if (!next[currentRow]) {
@@ -92,7 +98,16 @@ function App() {
         return next;
       });
 
-      await new Promise((res) => setTimeout(res, 500));
+      // Remove flip class after animation completes
+      setTimeout(() => {
+        setFlippingBoxes((prev) => {
+          const next = new Set(prev);
+          next.delete(boxKey);
+          return next;
+        });
+      }, 600); // Match animation duration
+
+      await new Promise((res) => setTimeout(res, 500)); // Stagger delay
     }
 
     const allCorrect = evaluationResults.every(
@@ -159,6 +174,7 @@ function App() {
     setCurrentRow(0);
     setEvaluations([]);
     setGameOver(false);
+    setFlippingBoxes(new Set());
     setWords(
       Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => ""))
     );
@@ -190,8 +206,15 @@ function App() {
           <div key={rowIndex} className="row">
             {row?.map((box, colIndex) => {
               const evaluation = evaluations[rowIndex]?.[colIndex];
+              const boxKey = `${rowIndex}-${colIndex}`;
+              const isFlipping = flippingBoxes.has(boxKey);
               return (
-                <div key={colIndex} className={`box ${evaluation || ""}`}>
+                <div
+                  key={colIndex}
+                  className={`box ${evaluation || ""} ${
+                    isFlipping ? "flip" : ""
+                  }`}
+                >
                   {box}
                 </div>
               );
